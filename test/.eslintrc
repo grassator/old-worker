@@ -1,0 +1,17 @@
+{
+    "rules": {
+        "no-unused-expressions": 0,
+        "no-new": 0
+    },
+    "globals": {
+        "WORKER_ID": false,
+        "self": false,
+        "it": false,
+        "describe": false,
+        "before": false,
+        "beforeEach": false,
+        "after": false,
+        "afterEach": false,
+        "assert": false
+    }
+}
