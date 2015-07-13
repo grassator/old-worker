@@ -40,12 +40,20 @@ describe('interface', function () {
         assert.equal(called, 1);
     });
 
+    it('should have `onmessage` property callback', function () {
+        var worker = new OldWorker(NOOP_WORKER_URL);
+        var deliveredEvent;
+        worker.onmessage = function(event) {
+            deliveredEvent = event;
+        };
+        var e = { type: 'message' };
+        worker.dispatchEvent(e);
+        assert.equal(deliveredEvent, e);
+    });
+
     describe('TODO', function () {
         this.pending = true;
         it('should have `onerror` property callback', function () {
-            throw new Error();
-        });
-        it('should have `onmessage` property callback', function () {
             throw new Error();
         });
     });

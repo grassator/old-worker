@@ -43,16 +43,28 @@ window.addEventListener('message', function (e) {
     if (!id || !(id in workers)) {
         return;
     }
-    var workerEvent = {
-        type: 'message',
-        data: e.data.payload
-    };
-    var worker = workers[id];
-    if (worker.onmessage) {
-        worker.onmessage.call(worker, workerEvent);
+    switch (e.data.type) {
+        case 'message':
+            workers[id].dispatchEvent({ type: 'message', data: e.data.payload });
+            break;
+        default:
+            break;
     }
-    worker.dispatchEvent(workerEvent);
 }, false);
+
+const scopeTemplate = `
+(function (window) {
+window.oldWorkerPostMessage = window.postMessage;
+window.postMessage = function postMessage(payload) {
+    window.parent.postMessage({ WORKER_ID: WORKER_ID, type: 'message', payload: payload }, window.parent.location);
+};
+}(this));
+eval('var ' + [
+    'window', 'document', 'top', 'frames', 'parent', 'history', 'external', 'alert', 'open', 'prompt', 'confirm',
+    'moveTo', 'moveBy', 'screenTop', 'screenLeft', 'screenX', 'screenY', 'offsetHeight', 'offsetWidth',
+    'scrollX', 'scrollY', 'innerHeight', 'innerWidth', 'pageXOffset', 'pageXOffset'
+].join(','));
+var self = this;`;
 
 function OldWorker(scriptURL) {
     if (arguments.length < 1) {
@@ -80,8 +92,16 @@ function OldWorker(scriptURL) {
     this.iframe.style.position = 'absolute';
     this.iframe.style.top = '-100px';
     document.body.appendChild(this.iframe);
-    setSrcDoc(this.iframe, `<script>WORKER_ID = ${this.id};</script><script src="${resolver.href}"></script>`);
+    setSrcDoc(
+        this.iframe,
+        `<script>WORKER_ID = ${this.id};</script><script>${scopeTemplate}</script><script src="${resolver.href}"></script>`
+    );
 }
+
+OldWorker.prototype.postMessage = function postMessage(message) {
+    this.iframe.contentWindow.oldWorkerPostMessage(message, '*');
+};
+
 
 OldWorker.prototype.terminate = function terminate() {
     if (!this.iframe) {
@@ -114,11 +134,14 @@ OldWorker.prototype.dispatchEvent = function dispatchEvent(event) {
     if (!event || !event.type) {
         throw new TypeError('You need to provide a valid event for dispatchEvent call');
     }
+    event.target = this;
+    if (event.type === 'message' && typeof this.onmessage === 'function') {
+        this.onmessage(event);
+    }
     var listeners = this.listeners[event.type];
     if (!listeners || !listeners.length) {
         return;
     }
-    event.target = this;
     for (var i = 0, length = listeners.length; i < length; ++i) {
         listeners[i].call(this, event);
     }

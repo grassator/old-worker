@@ -1,6 +1,6 @@
 # Old Worker
 
-> NOTE This is work in progress and probably doesn't do anything useful yet.
+> NOTE This is work in progress and only basic message passing works as of this moment.
 
 Goal of `Old Worker` is to provide highly-accurate polyfill for Web Workers in following browsers:
 
@@ -8,7 +8,7 @@ Goal of `Old Worker` is to provide highly-accurate polyfill for Web Workers in f
 - IE9
 - IE8 (possibly)
 
-[![NPM version](https://badge.fury.io/js/happened.svg)](https://npmjs.org/package/old-worker)
+[![NPM version](https://badge.fury.io/js/old-worker.svg)](https://npmjs.org/package/old-worker)
 [![GitHub version][git-tag-image]][project-url]
 [![Dependency Status][daviddm-url]][daviddm-image]
 
