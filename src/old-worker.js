@@ -58,13 +58,19 @@ window.oldWorkerPostMessage = window.postMessage;
 window.postMessage = function postMessage(payload) {
     window.parent.postMessage({ WORKER_ID: WORKER_ID, type: 'message', payload: payload }, window.parent.location);
 };
+window.onmessage = function (
+    e,
+    window, document, top, frames, parent, history, external, alert, open, prompt, confirm,
+    moveTo, moveBy, screenTop, screenLeft, screenX, screenY, offsetHeight, offsetWidth,
+    scrollX, scrollY, innerHeight, innerWidth, pageXOffset, pageXOffset
+) {
+    if (e.data.type !== 'WORKER_INIT') return;
+    var self = this;
+    this.onmessage = null;
+    eval(e.data.scriptText);
+}.bind(this);
 }(this));
-eval('var ' + [
-    'window', 'document', 'top', 'frames', 'parent', 'history', 'external', 'alert', 'open', 'prompt', 'confirm',
-    'moveTo', 'moveBy', 'screenTop', 'screenLeft', 'screenX', 'screenY', 'offsetHeight', 'offsetWidth',
-    'scrollX', 'scrollY', 'innerHeight', 'innerWidth', 'pageXOffset', 'pageXOffset'
-].join(','));
-var self = this;`;
+`;
 
 function OldWorker(scriptURL) {
     if (arguments.length < 1) {
@@ -92,9 +98,22 @@ function OldWorker(scriptURL) {
     this.iframe.style.position = 'absolute';
     this.iframe.style.top = '-100px';
     document.body.appendChild(this.iframe);
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            this.postMessage({
+                type: 'WORKER_INIT',
+                scriptText: xhr.responseText
+            });
+        }
+    }.bind(this);
+    xhr.open('GET', resolver.href, true);
+    xhr.send(null);
+
     setSrcDoc(
         this.iframe,
-        `<script>WORKER_ID = ${this.id};</script><script>${scopeTemplate}</script><script src="${resolver.href}"></script>`
+        `<script>WORKER_ID = ${this.id};</script><script>${scopeTemplate}</script>`
     );
 }
 

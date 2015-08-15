@@ -21,6 +21,7 @@
         "window": false,
         "document": false,
         "location": false,
-        "DOMException": false
+        "DOMException": false,
+        "XMLHttpRequest": false
     }
 }
